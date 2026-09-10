@@ -1,0 +1,142 @@
+solid body_cheek.stl
+facet normal 0.0 -1.0 0.0
+outer loop
+vertex -0.095 -0.004 0.025
+vertex 0.095 -0.004 0.025
+vertex 0.095 -0.004 0.045
+endloop
+endfacet
+facet normal 0.0 1.0 0.0
+outer loop
+vertex -0.095 0.004 0.025
+vertex 0.095 0.004 0.045
+vertex 0.095 0.004 0.025
+endloop
+endfacet
+facet normal 0.0 -1.0 0.0
+outer loop
+vertex -0.095 -0.004 0.025
+vertex 0.095 -0.004 0.045
+vertex 0.07 -0.004 0.073
+endloop
+endfacet
+facet normal 0.0 1.0 0.0
+outer loop
+vertex -0.095 0.004 0.025
+vertex 0.07 0.004 0.073
+vertex 0.095 0.004 0.045
+endloop
+endfacet
+facet normal 0.0 -1.0 0.0
+outer loop
+vertex -0.095 -0.004 0.025
+vertex 0.07 -0.004 0.073
+vertex 0.02 -0.004 0.083
+endloop
+endfacet
+facet normal 0.0 1.0 0.0
+outer loop
+vertex -0.095 0.004 0.025
+vertex 0.02 0.004 0.083
+vertex 0.07 0.004 0.073
+endloop
+endfacet
+facet normal 0.0 -1.0 0.0
+outer loop
+vertex -0.095 -0.004 0.025
+vertex 0.02 -0.004 0.083
+vertex -0.095 -0.004 0.075
+endloop
+endfacet
+facet normal 0.0 1.0 0.0
+outer loop
+vertex -0.095 0.004 0.025
+vertex -0.095 0.004 0.075
+vertex 0.02 0.004 0.083
+endloop
+endfacet
+facet normal 0.0 0.0 -1.0
+outer loop
+vertex -0.095 -0.004 0.025
+vertex -0.095 0.004 0.025
+vertex 0.095 0.004 0.025
+endloop
+endfacet
+facet normal 0.0 0.0 -1.0
+outer loop
+vertex -0.095 -0.004 0.025
+vertex 0.095 0.004 0.025
+vertex 0.095 -0.004 0.025
+endloop
+endfacet
+facet normal 1.0 0.0 0.0
+outer loop
+vertex 0.095 -0.004 0.025
+vertex 0.095 0.004 0.025
+vertex 0.095 0.004 0.045
+endloop
+endfacet
+facet normal 1.0 0.0 0.0
+outer loop
+vertex 0.095 -0.004 0.025
+vertex 0.095 0.004 0.045
+vertex 0.095 -0.004 0.045
+endloop
+endfacet
+facet normal 0.7459376616259147 -0.0 0.6660157693088523
+outer loop
+vertex 0.095 -0.004 0.045
+vertex 0.095 0.004 0.045
+vertex 0.07 0.004 0.073
+endloop
+endfacet
+facet normal 0.7459376616259147 0.0 0.6660157693088523
+outer loop
+vertex 0.095 -0.004 0.045
+vertex 0.07 0.004 0.073
+vertex 0.07 -0.004 0.073
+endloop
+endfacet
+facet normal 0.1961161351381842 -0.0 0.9805806756909202
+outer loop
+vertex 0.07 -0.004 0.073
+vertex 0.07 0.004 0.073
+vertex 0.02 0.004 0.083
+endloop
+endfacet
+facet normal 0.1961161351381842 0.0 0.9805806756909202
+outer loop
+vertex 0.07 -0.004 0.073
+vertex 0.02 0.004 0.083
+vertex 0.02 -0.004 0.083
+endloop
+endfacet
+facet normal -0.06939750171322041 0.0 0.9975890871275425
+outer loop
+vertex 0.02 -0.004 0.083
+vertex 0.02 0.004 0.083
+vertex -0.095 0.004 0.075
+endloop
+endfacet
+facet normal -0.06939750171322041 0.0 0.9975890871275425
+outer loop
+vertex 0.02 -0.004 0.083
+vertex -0.095 0.004 0.075
+vertex -0.095 -0.004 0.075
+endloop
+endfacet
+facet normal -1.0 0.0 0.0
+outer loop
+vertex -0.095 -0.004 0.075
+vertex -0.095 0.004 0.075
+vertex -0.095 0.004 0.025
+endloop
+endfacet
+facet normal -1.0 0.0 0.0
+outer loop
+vertex -0.095 -0.004 0.075
+vertex -0.095 0.004 0.025
+vertex -0.095 -0.004 0.025
+endloop
+endfacet
+endsolid body_cheek.stl

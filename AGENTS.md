@@ -2,6 +2,28 @@
 
 Testing is part of the SDD process and starts during specification, not after implementation.
 
+### Specification and Acceptance Criteria
+
+The user is not expected to manually define acceptance criteria.
+
+Start from the user's desired outcome in natural language and derive:
+
+- functional requirements;
+- acceptance criteria;
+- happy paths;
+- boundary cases;
+- failure cases;
+- observable results.
+
+Ask clarification questions only when an unresolved decision materially affects
+behavior, interfaces, safety, limits, error handling, or verification.
+
+Do not ask the user for information that can reasonably be derived from the
+repository, existing specifications, or project context.
+
+Do not invent arbitrary tolerances, timing requirements, limits, or failure behavior.
+If such a value is necessary and cannot be derived, ask for clarification.
+
 ### During Specify
 
 Every substantial requirement must be testable.

@@ -94,3 +94,20 @@ Before a feature is considered complete:
 - unverified behavior must be explicitly reported.
 
 A successful build alone does not prove that a feature works.
+
+## Quality Gates
+
+Before declaring implementation changes ready for commit or review:
+
+- Run `./scripts/check.sh`.
+- Report any failed or skipped checks.
+- Do not claim unverified behavior as tested.
+- A successful run with zero registered tests does not establish behavioral coverage.
+
+Before declaring a substantial feature complete:
+
+- Request an independent review from the `reviewer` subagent.
+- Resolve all blocking findings and verify the affected behavior again.
+- Report any remaining non-blocking findings and unverified behavior.
+- If required checks or independent review cannot be completed, report the limitation
+  and do not declare the feature complete.

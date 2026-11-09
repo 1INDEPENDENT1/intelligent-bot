@@ -84,6 +84,19 @@ Implement the required tests or verification procedures together with the featur
 - preserve existing tests;
 - do not rely only on visual inspection when behavior can be measured.
 
+### Test Readability and Maintainability
+
+- Tests must clearly express the behavior being verified, following Arrange–Act–Assert where practical.
+- Keep test functions short and focused, preferably under 30–40 lines.
+- Separate test assertions from infrastructure setup, process management, and cleanup using small helpers or pytest fixtures.
+- Avoid deeply nested logic, duplicated code, and unnecessary abstractions.
+- Prefer descriptive names over comments explaining complicated implementation.
+- Report independent verification results without masking failures or skipping unrelated checks.
+- Do not split tests into extra files merely to satisfy line-count guidelines.
+- Keep tests understandable without requiring the reader to trace through several layers of helpers.
+
+Readability and simplicity take priority over arbitrary line limits.
+
 ### Completion
 
 Before a feature is considered complete:

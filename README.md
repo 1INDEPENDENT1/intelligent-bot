@@ -34,7 +34,7 @@ with a **90 mm diameter head**.
 ## Current development stage
 
 Development currently uses ROS 2 Jazzy and Gazebo Harmonic (Sim 8) on Ubuntu
-24.04 in WSL2/WSLg. The repository implements the initial geometry and simulation
+24.04 in WSL2/WSLg, using **Cyclone DDS** (`rmw_cyclonedds_cpp`) by default. The repository implements the initial geometry and simulation
 foundation: body, fixed track envelopes, a passive head pitch joint, a minimal
 world, and ROS joint-state/TF integration.
 
@@ -71,6 +71,7 @@ Run these commands inside WSL **Ubuntu-24.04**:
 ```bash
 source /opt/ros/jazzy/setup.bash
 cd ~/robot_ws
+source scripts/ros_env.sh
 colcon build --base-paths src --packages-select robot_description --symlink-install
 source install/setup.bash
 ros2 launch robot_description gazebo.launch.py
@@ -88,7 +89,47 @@ For headless simulation, replace the launch command with:
 ros2 launch robot_description gazebo.launch.py gui:=false
 ```
 
-Source both ROS and the workspace environment in each new terminal. Run one
+Source ROS, `scripts/ros_env.sh`, and the workspace setup in each new terminal,
+including terminals used for `ros2 topic` and TF inspection. Run one
 simulation instance at a time and stop it with Ctrl+C. See the
 [package validation commands](src/robot_description/README.md#validation-commands)
 for model conversion, ROS topic, and TF checks.
+
+## Automated baseline checks
+
+Run `./scripts/check.sh` for fast conversion, build, installed-resource, and model
+contract checks. Run `./scripts/check.sh --full` to also launch one isolated,
+headless Gazebo simulation and observe spawning, clock, head joint state, and TF.
+Both commands work when called by absolute path from another directory and return
+nonzero on failure. Full checks use a 60-second observation deadline and clean up
+their own simulation processes. No physical hardware is involved.
+
+Fast pytest cases cover the installed model, child-process RMW selection and the
+Cyclone dependency. One Gazebo pytest case checks real runtime integration. Colcon's
+summary also counts CTest wrapper results; it is not a count of distinct robot
+behaviors. See the [baseline specification](specs/001-robot-description-baseline/spec.md)
+and [package coverage](src/robot_description/README.md#validation-commands).
+
+## ROS middleware selection
+
+`scripts/ros_env.sh` exports Cyclone DDS as the project default when
+`RMW_IMPLEMENTATION` is unset or empty. `scripts/check.sh` sources it automatically;
+manual launches and ROS inspection terminals must source it before starting ROS.
+The launch inherits that environment, as does the test observer. No global shell
+configuration is changed. An explicit RMW selection is preserved for diagnostics:
+
+```bash
+RMW_IMPLEMENTATION=rmw_fastrtps_cpp ./scripts/check.sh --full
+```
+
+That diagnostic override is not the validated project default. A missing selected
+middleware package fails the check command early; there is no silent fallback.
+`rmw_cyclonedds_cpp` is declared as an execution dependency for `rosdep`.
+
+On 2026-11-06, we explicitly used Cyclone DDS for a successful two-process ROS
+exchange (81 received strings) and a full project check: 205 `/clock` messages,
+202 `/joint_states` messages, all four expected TF paths and cleanup passed.
+These were real simulated/ROS messages, with no hardware involved. Earlier
+Fast DDS runs received zero messages; its exact failure mechanism remains
+unproven. Changing middleware provides a working configuration, not a diagnosis
+of the underlying Fast DDS problem. See the package README for current validation.

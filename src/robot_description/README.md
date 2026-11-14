@@ -1,6 +1,7 @@
 # Compact tracked companion — geometry prototype
 
-Ubuntu 24.04 (WSL2/WSLg), ROS 2 Jazzy, Gazebo Harmonic / Sim 8.
+Ubuntu 24.04 (WSL2/WSLg), ROS 2 Jazzy, Gazebo Harmonic / Sim 8,
+**Cyclone DDS** (`rmw_cyclonedds_cpp`) as the project default.
 Based on the supplied engineering reference sheet; no decorative shell,
 arms, manipulators, sensors, or AI are included.
 
@@ -14,7 +15,8 @@ Gazebo launch, world, and ROS bridge configuration.
 It does not own a drive controller, head actuator, hardware driver, navigation,
 localization, sensor processing, or high-level behavior. There are no custom
 C++/Python node classes, composable nodes, public class methods, message/service/
-action definitions, Xacro files, or automated tests. The runtime nodes and
+action definitions or Xacro files. Automated baseline tests cover the existing
+description and simulation integration. The runtime nodes and
 Gazebo systems below are external dependencies configured by this package.
 
 ## Recursive context map
@@ -50,7 +52,9 @@ robot_description/
         └── SceneBroadcaster         External Gazebo scene publication system.
 ```
 
-The CMake file builds no executable or library and registers no tests. It requires
+The CMake file builds no executable or library. With `BUILD_TESTING` enabled it
+registers fast description tests and a Gazebo smoke test using `ament_cmake_pytest`.
+It requires
 CMake 3.8 or newer and `ament_cmake`. The manifest's `gazebo_model_path` export
 points at `${prefix}/..` so Gazebo can resolve package mesh resources.
 
@@ -91,10 +95,17 @@ meshes. The preview is documentation-only.
 
 Declared build dependency: `ament_cmake`. Declared execution dependencies:
 `robot_state_publisher`, `urdf`, `ament_index_python`, `launch`, `launch_ros`,
-`ros2launch`, `ros_gz_sim`, `ros_gz_bridge`, `rosgraph_msgs`, and `sensor_msgs`.
+`ros2launch`, `ros_gz_sim`, `ros_gz_bridge`, `rosgraph_msgs`, `sensor_msgs`,
+and `rmw_cyclonedds_cpp`.
 The environment additionally supplies Python 3 (`pathlib`), ROS 2 Jazzy, Gazebo
 Harmonic / Sim 8 and its systems, `colcon`, and `rosdep`. GUI use requires a
 working graphical session such as WSLg. TF inspection below uses `tf2_ros`.
+
+Test dependencies are declared in `package.xml`: `ament_cmake_pytest`,
+`python3-pytest`, `rclpy`, `tf2_ros`, and `domain_coordinator`, in addition to
+the existing runtime dependencies. Test code lives in `test/test_description.py`,
+`test/test_runtime_environment.py`, and `test/test_gazebo_smoke.py`; it is not
+installed as robot runtime code.
 
 ## Build and launch
 
@@ -102,6 +113,7 @@ Inside WSL **Ubuntu-24.04**:
 
     source /opt/ros/jazzy/setup.bash
     cd ~/robot_ws
+    source scripts/ros_env.sh
     colcon build --packages-select robot_description --symlink-install
     source ~/robot_ws/install/setup.bash
     ros2 launch robot_description gazebo.launch.py
@@ -110,7 +122,12 @@ For a server without a GUI:
 
     ros2 launch robot_description gazebo.launch.py gui:=false
 
-Source both setup files in each new terminal. Run one instance at a time.
+Source both setup files and `scripts/ros_env.sh` in each new terminal, including
+terminals running ROS topic/TF inspection. The environment script selects Cyclone
+DDS when RMW_IMPLEMENTATION is unset or empty and preserves explicit diagnostic
+overrides. All nodes and the observer inherit the selected RMW; setting it only
+inside the launch file would not configure external observers.
+Run one instance at a time.
 Stop with Ctrl+C. If a previous Gazebo server remains after closing launch,
 close that instance before launching another model in the same world.
 
@@ -189,21 +206,52 @@ Pitch is visually indistinguishable on a featureless sphere.
 
 ## Validation commands
 
-Run the build above first. These commands are procedures, not claims that a new
-simulation run or test suite was executed during this documentation update.
+From the workspace root in Ubuntu 24.04 / ROS 2 Jazzy / Gazebo Harmonic:
 
 ```bash
 cd ~/robot_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-gz sdf -p src/robot_description/urdf/robot.urdf > /dev/null
-colcon test --packages-select robot_description
-colcon test-result --verbose
+./scripts/check.sh          # default fast checks; no simulator
+./scripts/check.sh --full   # fast checks plus headless Gazebo/ROS smoke test
 ```
 
-`gz sdf -p` checks URDF-to-SDF conversion. No automated tests are registered, so
-a successful `colcon test` alone does not establish working simulation behavior.
-With one simulation instance running, inspect from another sourced terminal:
+The script selects the project RMW, sources Jazzy, verifies the selected middleware
+package exists, checks URDF-to-SDF conversion once, builds with symlink
+installation, sources the workspace, verifies test registration, clears previous
+generated test results, and runs/reports the selected tests. Failed assertions
+produce a nonzero script status. Fast mode excludes the CTest `gazebo` label;
+bare `colcon test` runs all groups after building and sourcing the workspace and
+`scripts/ros_env.sh`. The smoke test requires an explicit RMW selection and fails
+if it differs from the observer's actually loaded middleware.
+
+| Test | Coverage | Failure examples |
+| --- | --- | --- |
+| `test_installed_resources` | Installed URDF, launch, world, bridge configuration, and referenced mesh files | Missing install entry or broken mesh URI |
+| `test_model_contract` | Documented public links/joints, connectivity, types, pitch axis, valid head limits | Renamed frame, wrong parent/type/axis, invalid limits |
+| `test_rmw_selection_reaches_child_process` | Default, empty and explicit RMW selections are exported to a real child process | Missing default, ignored override, unexported setting |
+| `test_smoke_rejects_missing_or_mismatched_rmw` | Real rclpy contexts reject missing or mismatched middleware selection before Gazebo starts | Observer silently uses a different middleware |
+| `test_cyclone_runtime_dependency_is_declared` | Cyclone is a declared runtime dependency | Missing dependency in package.xml |
+| `test_headless_gazebo_baseline` | Actual model in `minimal`, advancing `/clock`, finite head joint state, expected TF paths | Failed spawn, missing bridge/publication, broken TF |
+
+Fast cases cover model resources/contracts and runtime environment selection;
+there is one full simulation case. Colcon may also
+count CTest wrappers in its summary; these are not additional behavioral tests.
+Full mode uses a reserved ROS test domain and unique Gazebo partition. Do not
+manually publish into a domain reserved by `domain_coordinator`. The test allows
+60 wall-clock seconds for observations, 10 seconds for graceful shutdown, then
+force-stops only its own process group if needed and checks cleanup. These are
+test-runner bounds, not robot performance requirements. Missing dependencies or
+observations fail rather than skip. Detailed SDD mapping and run evidence live in
+[`specs/001-robot-description-baseline`](../../specs/001-robot-description-baseline/).
+
+Interrupting the check command requests cancellation and waits for simulator
+cleanup. A model query already in progress can use the remaining observation
+deadline before cancellation is handled. ROS initialization, shutdown, and final
+process reaping are outside the observation deadline; 70 seconds is not a total
+command timeout.
+
+The smoke test does not assess rendering, settling/stability tolerances, physical
+accuracy of geometry/inertia, traction, actuator control, or hardware. For manual
+inspection with one simulation instance running, use another sourced terminal:
 
 ```bash
 ros2 topic echo /clock --once
@@ -221,11 +269,20 @@ show rotation clearly. These checks do not validate traction or hardware control
 
 ## Current limitations
 
+- We used Cyclone DDS for the successful real two-process exchange and full
+  Gazebo/ROS check on 2026-11-06 (205 clock messages, 202 joint states, all four TF
+  paths, cleanup PASS). The project now selects it by default. Earlier Fast DDS
+  failures remain unexplained. A bounded sequence of successful starts does not
+  guarantee reliability across reboots, networks, other machines or hardware.
+  Earlier baseline verification reports describe their historical environment;
+  this middleware choice and its new run evidence supersede their runtime status
+  only for the checks actually repeated.
 - Fixed track envelopes have no belt/roller degrees of freedom or drive interface.
 - The head joint is passive. Its limits are +/-0.610865 rad, effort 0.5 N m,
   velocity 1 rad/s, damping 0.02, and friction 0.001; no command controller exists.
 - Masses/inertias are estimates, not measurements of physical hardware.
-- There is no localization, sensing, physical hardware integration, or test suite.
+- There is no localization, sensing, or physical hardware integration. Baseline
+  tests establish only the description and runtime integration checks listed above.
 - Simulation configuration currently resides in this description package.
 - Empty `src/` and `include/` directories are scaffolding and may not survive a
   fresh Git checkout. README and preview assets are not installed by CMake.
@@ -242,3 +299,12 @@ head_pitch_joint, its base_link-to-head_link transform, and advancing /clock.
 Gazebo reported a level settled pose near z=0.
 Mesh review confirmed closed surfaces, consistent normals, positive volume,
 and no degenerate triangles.
+
+## Cyclone DDS default validation — 2026-11-06
+
+After adding the shared environment, two consecutive `./scripts/check.sh --full`
+runs without an externally set RMW passed all eight fast pytest cases and the
+Gazebo smoke case (zero skips). Both observers loaded `rmw_cyclonedds_cpp`;
+clock, joint states, all four TF paths and cleanup passed in each fresh launch.
+The restart check is bounded to these two launches; it is not a guarantee of
+long-term reliability or physical hardware operation.

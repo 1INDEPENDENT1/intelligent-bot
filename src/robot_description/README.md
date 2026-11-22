@@ -7,8 +7,7 @@ arms, manipulators, sensors, or AI are included.
 
 ## Responsibility and ownership
 
-This is the workspace's only active ROS 2 package (`ament_cmake`, version
-`0.0.1`). It owns the tracked companion's visual/collision geometry, link and
+This description package uses `ament_cmake`, version `0.0.1`. It owns the tracked companion's visual/collision geometry, link and
 joint definitions, approximate inertias, mesh assets, and the current minimal
 Gazebo launch, world, and ROS bridge configuration.
 
@@ -278,7 +277,7 @@ show rotation clearly. These checks do not validate traction or hardware control
   this middleware choice and its new run evidence supersede their runtime status
   only for the checks actually repeated.
 - Fixed track envelopes have no belt/roller degrees of freedom or drive interface.
-- The head joint is passive. Its limits are +/-0.610865 rad, effort 0.5 N m,
+- The head joint is passive. Its limits are +/-0.610865 rad, effort 0.1765 N m,
   velocity 1 rad/s, damping 0.02, and friction 0.001; no command controller exists.
 - Masses/inertias are estimates, not measurements of physical hardware.
 - There is no localization, sensing, or physical hardware integration. Baseline
@@ -308,3 +307,12 @@ Gazebo smoke case (zero skips). Both observers loaded `rmw_cyclonedds_cpp`;
 clock, joint states, all four TF paths and cleanup passed in each fresh launch.
 The restart check is bounded to these two launches; it is not a guarantee of
 long-term reliability or physical hardware operation.
+
+## Optional head-control composition
+
+`robot_head` owns the head actuator policy and simulation composition; see
+[its README](../robot_head/README.md). This description launch now accepts optional
+`model_file:=/absolute/model.urdf`, used consistently by spawn and state publisher.
+Without an override it still loads the installed passive `robot.urdf`. Public
+joint/TF names and position/velocity limits remain unchanged. The effort ceiling
+is now based on the MG90S 4.8 V stall rating; see `../robot_head/README.md`.

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
@@ -14,6 +14,8 @@ def generate_launch_description():
     urdf = share / "urdf" / "robot.urdf"
     gazebo = Path(get_package_share_directory("ros_gz_sim"))
     return LaunchDescription([
+        DeclareLaunchArgument("model_file", default_value=str(urdf),
+                              description="URDF used by spawn and state publisher"),
         DeclareLaunchArgument("gui", default_value="true",
                               choices=["true", "false"],
                               description="Start the Gazebo GUI"),
@@ -27,14 +29,18 @@ def generate_launch_description():
                 "on_exit_shutdown": "true",
             }.items(),
         ),
-        Node(package="robot_state_publisher", executable="robot_state_publisher",
-             parameters=[{"robot_description": urdf.read_text(),
-                          "use_sim_time": True}], output="screen"),
-        Node(package="ros_gz_bridge", executable="parameter_bridge",
-             parameters=[{"config_file": str(share / "config/bridge.yaml"),
-                          "use_sim_time": True}], output="screen"),
-        Node(package="ros_gz_sim", executable="create",
-             arguments=["-world", "minimal", "-name", "my_robot",
-                        "-file", str(urdf), "-z", "0.02"],
-             output="screen"),
+        OpaqueFunction(function=_model_nodes, args=[share]),
     ])
+
+
+def _model_nodes(context, share):
+    urdf = Path(LaunchConfiguration("model_file").perform(context))
+    return [
+        Node(package="robot_state_publisher", executable="robot_state_publisher",
+             parameters=[{"robot_description": urdf.read_text(), "use_sim_time": True}], output="screen"),
+        Node(package="ros_gz_bridge", executable="parameter_bridge",
+             parameters=[{"config_file": str(share / "config/bridge.yaml"), "use_sim_time": True}], output="screen"),
+        Node(package="ros_gz_sim", executable="create",
+             arguments=["-world", "minimal", "-name", "my_robot", "-file", str(urdf), "-z", "0.02"],
+             output="screen"),
+    ]

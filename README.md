@@ -38,10 +38,14 @@ Development currently uses ROS 2 Jazzy and Gazebo Harmonic (Sim 8) on Ubuntu
 foundation: body, fixed track envelopes, a passive head pitch joint, a minimal
 world, and ROS joint-state/TF integration.
 
-The tracks do not move yet, and the head has no actuator controller. Movement,
-head control, camera and sensor integration, and eventually AI behavior are
-development directions from the project brief; they are not implemented product
-capabilities. Physical hardware integration is also still ahead.
+The `robot_head` package adds simulated head pitch control through the existing
+joint: body-relative targets and actual feedback, upward-positive angles, URDF
+constraints and automated Gazebo acceptance with three-second in-band holds.
+See [head control](src/robot_head/README.md) for launch and command instructions.
+The original description launch remains a passive baseline.
+
+The tracks do not move yet. Camera/sensor integration, autonomous behavior and
+physical hardware integration remain future work.
 
 ## Current packages
 
@@ -49,16 +53,19 @@ capabilities. Physical hardware integration is also still ahead.
 robot_ws/
 ├── README.md
 └── src/
-    └── robot_description/
+    ├── robot_description/
+    │   └── README.md
+    └── robot_head/
         └── README.md
 ```
 
 | Package | Responsibility | Context documentation |
 | --- | --- | --- |
 | `robot_description` | Robot geometry, meshes, link/joint definitions, and the current Gazebo world, launch, and ROS bridge configuration. | [Package README](src/robot_description/README.md) |
+| `robot_head` | Body-relative head pitch policy, measured feedback and native actuator composition. | [Head README](src/robot_head/README.md) |
 
-`robot_description` is the only ROS 2 package directly under `src/`, so there
-are no relationships or dependencies between local packages yet. It integrates
+`robot_head` depends on `robot_description` for the authoritative model and its
+baseline simulation launch. The description integrates
 with the external `robot_state_publisher`, `ros_gz_sim`, and `ros_gz_bridge`
 packages to spawn the model and expose simulation time, joint states, and TF.
 Its README contains the recursive file map, runtime interfaces, dependencies,

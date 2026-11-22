@@ -128,7 +128,9 @@
         <child link="head_link" />
         <origin xyz="0.047 0 0.075" rpy="0 0 0" />
         <axis xyz="0 1 0" />
-        <limit lower="-.610865" upper=".610865" effort="0.5" velocity="1.0" />
+        <!-- MG90S at 4.8 V: 1.8 kgf cm = 0.1765197 N m, rounded down.
+             Stall-torque ceiling only; not a validated continuous-duty rating. -->
+        <limit lower="-.610865" upper=".610865" effort="0.1765" velocity="1.0" />
         <dynamics damping="0.02" friction="0.001" />
     </joint>
     <link name="left_track_link">

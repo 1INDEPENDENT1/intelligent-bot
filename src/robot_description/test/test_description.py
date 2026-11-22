@@ -62,3 +62,26 @@ def test_model_contract(share):
     assert all(math.isfinite(v) for v in (lower, upper, effort, velocity)), "Non-finite head limits"
     assert lower < upper, "Head lower limit must be less than upper limit"
     assert effort > 0 and velocity > 0, "Head effort and velocity must be positive"
+
+
+def test_launch_model_override(tmp_path, share, monkeypatch):
+    """Both spawn and state publisher must consume the selected model."""
+    import importlib.util
+    from launch import LaunchContext
+    from launch.actions import DeclareLaunchArgument
+    path = share / "launch/gazebo.launch.py"
+    spec = importlib.util.spec_from_file_location("robot_gazebo_launch", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    arguments = [a.name for a in module.generate_launch_description().entities
+                 if isinstance(a, DeclareLaunchArgument)]
+    assert "model_file" in arguments
+    selected = tmp_path / "selected.urdf"
+    selected.write_text((share / "urdf/robot.urdf").read_text())
+    context = LaunchContext()
+    context.launch_configurations["model_file"] = str(selected)
+    monkeypatch.setattr(module, "Node", lambda **kwargs: kwargs)
+    nodes = module._model_nodes(context, share)
+    assert nodes[0]["parameters"][0]["robot_description"] == selected.read_text()
+    args = nodes[2]["arguments"]
+    assert args[args.index("-file") + 1] == str(selected)

@@ -1,0 +1,8 @@
+# Force PID; saturation and joint limits are read from the URDF.
+gains:
+  p_gain: 0.05
+  i_gain: 0.0
+  d_gain: 0.006
+# Desired reference speed: 10 deg/s = 0.17453292519943295 rad/s.
+# Fraction of the current URDF velocity limit (1 rad/s); not MG90S rated speed.
+reference_speed_scale: 0.17453292519943295

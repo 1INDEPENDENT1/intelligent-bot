@@ -57,6 +57,19 @@ if "gazebo" not in labels.get("LABELS", []):
     sys.exit("Gazebo test must have the gazebo label for fast/full selection")
 '
 
+printf '\n==> Verify head test registration\n'
+ctest --test-dir build/robot_head --show-only=json-v1 | python3 -c '
+import json, sys
+tests = {test["name"]: test for test in json.load(sys.stdin)["tests"]}
+required = {"test_head_policy", "test_head_interfaces", "test_head_gazebo"}
+missing = required - tests.keys()
+if missing:
+    sys.exit("Missing head test registration: " + ", ".join(sorted(missing)))
+labels = {p["name"]: p["value"] for p in tests["test_head_gazebo"]["properties"]}
+if "gazebo" not in labels.get("LABELS", []):
+    sys.exit("Head physical test must have the gazebo label")
+'
+
 printf '\n==> Clear previous generated test results\n'
 colcon test-result --test-result-base "$repo_root/build" --delete-yes
 
